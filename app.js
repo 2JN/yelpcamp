@@ -2,10 +2,13 @@ var path = require('path')
 var express = require('express')
 var fetch = require('node-fetch')
 var mongoose = require('mongoose')
+var passport = require('passport')
 var bodyParser = require('body-parser')
+var LocalStrategy = require('passport-local')
 
 var Campground = require('./models/campground')
 var Comment = require('./models/comment')
+var User = require('./models/user')
 
 var app = express()
 
@@ -18,6 +21,23 @@ mongoose.connect(dbLink)
 
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(bodyParser.urlencoded({ extended: true }))
+
+app.use(require('express-session')({
+  secret: 'anything that you want',
+  resave: false,
+  saveUninitialized: false
+}))
+
+app.use(passport.initialize())
+app.use(passport.session())
+passport.use(new LocalStrategy(User.authenticate()))
+passport.serializeUser(User.serializeUser())
+passport.deserializeUser(User.deserializeUser())
+
+app.use(function (req, res, next) {
+  res.locals.user = req.user
+  next()
+})
 
 app.get('/', function (req, res) {
   res.render('campgrounds/index')
@@ -59,7 +79,7 @@ app.get('/campgrounds/:id', function (req, res) {
   })
 })
 
-app.get('/campgrounds/:id/comments/new', function (req, res) {
+app.get('/campgrounds/:id/comments/new', isLoggedIn, function (req, res) {
   Campground.findById(req.params.id, function (err, campground) {
     if (err) {
       console.log(err)
@@ -69,7 +89,7 @@ app.get('/campgrounds/:id/comments/new', function (req, res) {
   })
 })
 
-app.post('/campgrounds/:id/comments', function (req, res) {
+app.post('/campgrounds/:id/comments', isLoggedIn, function (req, res) {
   Campground.findById(req.params.id, function (err, campground) {
     if (err) {
       console.log(err)
@@ -88,6 +108,53 @@ app.post('/campgrounds/:id/comments', function (req, res) {
     }
   })
 })
+
+app.get('/register', function (req, res) {
+  res.render('register')
+})
+
+app.post('/register', function (req, res) {
+  var { username, password } = req.body
+  User.register(new User({ username }), password, function (err, user) {
+    if (err) {
+      console.log(err)
+      return res.render('register')
+    }
+
+    passport.authenticate('local')(req, res, function () {
+      res.redirect('/campgrounds')
+    })
+  })
+})
+
+app.get('/login', function (req, res) {
+  res.render('login')
+})
+
+app.post(
+  '/login',
+
+  passport.authenticate('local', {
+    successRedirect: '/campgrounds', failureRedirect: '/login'
+  }),
+
+  function (req, res) {
+    // something happens later
+  }
+)
+
+app.get('/logout', function (req, res) {
+  req.logout()
+  res.redirect('/campgrounds')
+})
+
+function isLoggedIn (req, res, next) {
+  if (req.isAuthenticated()) {
+    return next()
+  }
+
+  res.redirect('/login')
+}
 
 var port = process.env.PORT || '3000'
 
