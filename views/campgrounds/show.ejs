@@ -19,6 +19,19 @@
           <p>
             <em>Submitted by <%= campground.author.username %><em>
           </p>
+          <a
+            class="btn btn-warning"
+            href="/campgrounds/<%= campground._id %>/edit"
+          >
+            Edit
+          </a>
+          <form
+            id="delete-form"
+            action="/campgrounds/<%= campground._id %>?_method=delete"
+            method="post"
+          >
+            <button class="btn btn-danger" name="button">Delete</button>
+          </form>
         </div>
       </div>
       <div class="card container">

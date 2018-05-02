@@ -5,6 +5,7 @@ var mongoose = require('mongoose')
 var passport = require('passport')
 var bodyParser = require('body-parser')
 var LocalStrategy = require('passport-local')
+var methodOverride = require('method-override')
 
 var campgroundRoutes = require('./routes/campgrounds')
 var commentRoutes = require('./routes/comments')
@@ -23,6 +24,7 @@ mongoose.connect(dbLink)
 
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(bodyParser.urlencoded({ extended: true }))
+app.use(methodOverride('_method'))
 
 app.use(require('express-session')({
   secret: 'anything that you want',
