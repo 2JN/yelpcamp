@@ -3,6 +3,8 @@ var router = express.Router()
 
 var Campground = require('../models/campground')
 
+var { isLoggedIn, checkCampgroundOwnership } = require('../middleware')
+
 router.get('/', function (req, res) {
   Campground.find({}, function (err, campgrounds) {
     if (err) {
@@ -78,31 +80,5 @@ router.delete('/:id', checkCampgroundOwnership, function (req, res) {
     }
   })
 })
-
-function isLoggedIn (req, res, next) {
-  if (req.isAuthenticated()) {
-    return next()
-  }
-
-  res.redirect('/login')
-}
-
-function checkCampgroundOwnership (req, res, next) {
-  if (req.isAuthenticated()) {
-    Campground.findById(req.params.id, function (err, campground) {
-      if (err) {
-        res.redirect('back')
-      } else {
-        if (campground.author.id.equals(req.user._id)) {
-          next()
-        } else {
-          res.redirect('back')
-        }
-      }
-    })
-  } else {
-    res.redirect('back')
-  }
-}
 
 module.exports = router
