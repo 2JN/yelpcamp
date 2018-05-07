@@ -24,7 +24,7 @@ router.post('/', isLoggedIn, function (req, res) {
     } else {
       Comment.create(req.body.comment, function (err, comment) {
         if (err) {
-          console.log(err)
+          req.flash('error', 'Something went wrong')
         } else {
           comment.author.id = req.user._id
           comment.author.username = req.user.username
@@ -33,6 +33,7 @@ router.post('/', isLoggedIn, function (req, res) {
           campground.comments.push(comment)
           campground.save()
 
+          req.flash('success', 'Successfully added comment')
           res.redirect(`/campgrounds/${req.params.id}`)
         }
       })
@@ -42,11 +43,13 @@ router.post('/', isLoggedIn, function (req, res) {
 
 router.get('/:comment_id/edit', checkCommentOwnership, function (req, res) {
   Campground.findById(req.params.id, function (err, campground) {
-    if (err) {
+    if (err || campground) {
+      req.flash('error', 'No campground found')
       res.redirect('back')
     } else {
       Comment.findById(req.params.comment_id, function (err, comment) {
-        if (err) {
+        if (err || comment) {
+          req.flash('error', 'No comment found')
           res.redirect('back')
         } else {
           res.render('comments/edit', { campground, comment })
@@ -75,6 +78,7 @@ router.delete('/:comment_id', checkCommentOwnership, function (req, res) {
     if (err) {
       res.redirect('back')
     } else {
+      req.flash('success', 'Comment deleted')
       res.redirect(`/campgrounds/${req.params.id}`)
     }
   })

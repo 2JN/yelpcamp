@@ -3,6 +3,7 @@ var express = require('express')
 var fetch = require('node-fetch')
 var mongoose = require('mongoose')
 var passport = require('passport')
+var flash = require('connect-flash')
 var bodyParser = require('body-parser')
 var LocalStrategy = require('passport-local')
 var methodOverride = require('method-override')
@@ -25,6 +26,7 @@ mongoose.connect(dbLink)
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(methodOverride('_method'))
+app.use(flash())
 
 app.use(require('express-session')({
   secret: 'anything that you want',
@@ -40,6 +42,8 @@ passport.deserializeUser(User.deserializeUser())
 
 app.use(function (req, res, next) {
   res.locals.user = req.user
+  res.locals.error = req.flash('error')
+  res.locals.success = req.flash('success')
   next()
 })
 

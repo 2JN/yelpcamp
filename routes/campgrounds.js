@@ -39,8 +39,9 @@ router.get('/new', isLoggedIn, function (req, res) {
 router.get('/:id', function (req, res) {
   var { id } = req.params
   Campground.findById(id).populate('comments').exec(function (err, campground) {
-    if (err) {
-      console.log(err)
+    if (err || campground) {
+      req.flash('error', 'Campground not found')
+      res.redirect('back')
     } else {
       res.render('campgrounds/show', { campground })
     }
@@ -49,7 +50,8 @@ router.get('/:id', function (req, res) {
 
 router.get('/:id/edit', checkCampgroundOwnership, function (req, res) {
   Campground.findById(req.params.id, function (err, campground) {
-    if (err) {
+    if (err || campground) {
+      req.flash('error', 'Campground not found')
       res.redirect('/campgrounds')
     } else {
       res.render('campgrounds/edit', { campground })
