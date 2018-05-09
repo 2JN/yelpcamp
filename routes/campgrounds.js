@@ -16,11 +16,11 @@ router.get('/', function (req, res) {
 })
 
 router.post('/', isLoggedIn, function (req, res) {
-  var { name, image, description } = req.body
+  var { name, price, image, description } = req.body
   var author = { id: req.user._id, username: req.user.username }
 
   Campground.create(
-    { name, image, description, author },
+    { name, price, image, description, author },
 
     function (err, campground) {
       if (err) {
@@ -39,7 +39,7 @@ router.get('/new', isLoggedIn, function (req, res) {
 router.get('/:id', function (req, res) {
   var { id } = req.params
   Campground.findById(id).populate('comments').exec(function (err, campground) {
-    if (err || campground) {
+    if (err || !campground) {
       req.flash('error', 'Campground not found')
       res.redirect('back')
     } else {

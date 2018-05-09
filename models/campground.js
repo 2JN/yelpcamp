@@ -2,6 +2,7 @@ var mongoose = require('mongoose')
 
 var CampgroundSchema = mongoose.Schema({
   name: String,
+  price: String,
   image: String,
   description: String,
   comments: [{ type: mongoose.Schema.ObjectId, ref: 'Comment' }],
