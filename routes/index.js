@@ -10,15 +10,14 @@ router.get('/', function (req, res) {
 })
 
 router.get('/register', function (req, res) {
-  res.render('register')
+  res.render('register', { page: 'register' })
 })
 
 router.post('/register', function (req, res) {
   var { username, password } = req.body
   User.register(new User({ username }), password, function (err, user) {
     if (err) {
-      req.flash('error', err.message)
-      return res.render('register')
+      return res.render('register', { error: err.message })
     }
 
     passport.authenticate('local')(req, res, function () {
@@ -29,7 +28,7 @@ router.post('/register', function (req, res) {
 })
 
 router.get('/login', function (req, res) {
-  res.render('login')
+  res.render('login', { page: 'login' })
 })
 
 router.post(
