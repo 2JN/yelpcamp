@@ -16,11 +16,21 @@ var options = {
 var geocoder = NodeGeocoder(options)
 
 router.get('/', function (req, res) {
-  Campground.find({}, function (err, campgrounds) {
+  var regex
+
+  if (req.query.search) {
+    regex = new RegExp(escapeRegex(req.query.search), 'gi')
+  }
+
+  Campground.find((regex ? { name: regex } : {}), function (err, campgrounds) {
     if (err) {
-      console.log(err)
+      req.flash('error', err)
     } else {
-      res.render('campgrounds', { campgrounds, page: 'campgrounds' })
+      campgrounds.length < 1
+        ? res.render('campgrounds', {
+          campgrounds, error: 'No campgrounds were found', page: 'campgrounds'
+        })
+        : res.render('campgrounds', { campgrounds, page: 'campgrounds' })
     }
   })
 })
@@ -114,5 +124,9 @@ router.delete('/:id', checkCampgroundOwnership, function (req, res) {
     }
   })
 })
+
+function escapeRegex (text) {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
+}
 
 module.exports = router
