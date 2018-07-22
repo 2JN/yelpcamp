@@ -17,22 +17,41 @@ var geocoder = NodeGeocoder(options)
 
 router.get('/', function (req, res) {
   var regex
+  var perPage = 8
+  var pageQuery = parseInt(req.query.page)
+  var pageNumber = pageQuery || 1
 
   if (req.query.search) {
     regex = new RegExp(escapeRegex(req.query.search), 'gi')
   }
 
-  Campground.find((regex ? { name: regex } : {}), function (err, campgrounds) {
-    if (err) {
-      req.flash('error', err)
-    } else {
-      campgrounds.length < 1
-        ? res.render('campgrounds', {
-          campgrounds, error: 'No campgrounds were found', page: 'campgrounds'
+  Campground.find((regex ? { name: regex } : {}))
+    .skip((perPage * pageNumber) - perPage).limit(perPage).exec(
+      function (err, campgrounds) {
+        if (err) { req.flash('error', err) }
+
+        Campground.count().exec(function (err, count) {
+          if (err) {
+            req.flash('error', err)
+          } else {
+            campgrounds.length < 1
+              ? res.render('campgrounds', {
+                pages: 0,
+                campgrounds,
+                page: 'campgrounds',
+                current: pageNumber,
+                error: 'No campgrounds were found'
+              })
+              : res.render('campgrounds', {
+                campgrounds,
+                page: 'campgrounds',
+                current: pageNumber,
+                pages: Math.ceil(count / perPage)
+              })
+          }
         })
-        : res.render('campgrounds', { campgrounds, page: 'campgrounds' })
-    }
-  })
+      }
+    )
 })
 
 router.post('/', isLoggedIn, function (req, res) {
